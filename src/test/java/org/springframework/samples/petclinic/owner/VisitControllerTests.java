@@ -5,21 +5,25 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.samples.petclinic.visit.Visit;
 import org.springframework.samples.petclinic.visit.VisitRepository;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 //@ContextConfiguration(classes=ApplicationTestConfig.class)
 
@@ -31,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class VisitControllerTests {
 
 	private static final int TEST_PET_ID = 20;
+	private static final int TEST_OWNER_ID = 20;
 
 	@Autowired
 	private MockMvc mvc;
@@ -55,7 +60,7 @@ public class VisitControllerTests {
 		petType.setId(20);
 
 		Owner owner = new Owner();
-		owner.setId(20);
+		owner.setId(TEST_OWNER_ID);
 		owner.setFirstName("George");
 		owner.setLastName("Franklin");
 		owner.setAddress("110 W. Liberty St.");
@@ -65,7 +70,7 @@ public class VisitControllerTests {
 		Pet pet = new Pet();
 		pet.setBirthDate(LocalDate.of(1998, 1, 1));
 		pet.setType(petType);
-		pet.setId(20);
+		pet.setId(TEST_PET_ID);
 		pet.setName("lucky");
 		pet.setOwner(owner);
 
@@ -98,6 +103,33 @@ public class VisitControllerTests {
 			.andExpect(status().isOk())
 			.andExpect(model().attributeExists("pet"))
 			.andExpect(view().name("pets/createOrUpdateVisitForm"));
+	}
+
+	@Test
+	public void processNewVisitFormError() throws Exception {
+		given(this.petRepository.findById(TEST_PET_ID)).willReturn(this.pets.get(0));
+		given(this.visitRepository.findByPetId(TEST_PET_ID)).willReturn(this.visits);
+
+		mvc.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_PET_ID, TEST_OWNER_ID)
+			.param("pet_id", String.valueOf(TEST_PET_ID)).param("date", "2002-01-01"))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("pet"))
+			.andExpect(view().name("pets/createOrUpdateVisitForm"));
+	}
+
+
+	@Test
+	public void processNewVisitFormSuccess() throws Exception {
+		given(this.petRepository.findById(TEST_PET_ID)).willReturn(this.pets.get(0));
+		given(this.visitRepository.findByPetId(TEST_PET_ID)).willReturn(this.visits);
+
+
+		mvc.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_PET_ID, TEST_OWNER_ID)
+			.param("visit_date", "2002-01-01").param("description", "new visit")
+			.param("pet_id", String.valueOf(TEST_PET_ID)))
+			.andExpect(status().is3xxRedirection());
+
+		verify(this.visitRepository).save(any(Visit.class));
 	}
 
 }
