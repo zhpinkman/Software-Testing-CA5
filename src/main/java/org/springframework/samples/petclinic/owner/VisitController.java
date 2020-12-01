@@ -49,14 +49,6 @@ class VisitController {
 		this.pets = pets;
 	}
 
-	public PetRepository getPets() {
-		return pets;
-	}
-
-	public VisitRepository getVisits() {
-		return visits;
-	}
-
 	@InitBinder
 	public void setAllowedFields(WebDataBinder dataBinder) {
 		dataBinder.setDisallowedFields("id");
@@ -76,7 +68,7 @@ class VisitController {
 		model.put("pet", pet);
 		Visit visit = new Visit();
 		pet.addVisit(visit);
-		return null;
+		return visit;
 	}
 
 	// Spring MVC calls method loadPetWithVisit(...) before initNewVisitForm is called

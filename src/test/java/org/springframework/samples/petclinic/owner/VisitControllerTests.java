@@ -1,69 +1,52 @@
 package org.springframework.samples.petclinic.owner;
 
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.samples.petclinic.visit.Visit;
-import org.springframework.samples.petclinic.visit.VisitRepository;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
-import javax.swing.text.html.HTML;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.core.StringContains.containsString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import org.junit.Assert;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.samples.petclinic.visit.Visit;
+import org.springframework.samples.petclinic.visit.VisitRepository;
+import org.springframework.test.web.servlet.MockMvc;
+
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 //@ContextConfiguration(classes=ApplicationTestConfig.class)
 
-@SpringBootTest
-@RunWith(SpringJUnit4ClassRunner.class)
-@WebAppConfiguration
-@AutoConfigureMockMvc
+//@SpringBootTest
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@WebAppConfiguration
+
+@WebMvcTest(VisitController.class)
 public class VisitControllerTests {
 
-
-	@MockBean
-	VisitRepository visitRepository;
-
-	@MockBean
-	PetRepository petRepository;
-
-	@InjectMocks
-	VisitController visitController;
+	private static final int TEST_PET_ID = 20;
 
 	@Autowired
-	MockMvc mockMvc;
+	private MockMvc mvc;
 
-	public List<Pet> pets;
-	public List<Visit> visits;
+	@MockBean
+	private VisitRepository visitRepository;
 
-	@Before
-	public void setup() {
-		MockitoAnnotations.initMocks(this);
+	@MockBean
+	private PetRepository petRepository;
 
+
+	private List<Pet> pets;
+	private List<Visit> visits;
+
+	@BeforeEach
+	void setup() {
 		this.pets = new ArrayList<>();
 		this.visits = new ArrayList<>();
 
@@ -99,29 +82,22 @@ public class VisitControllerTests {
 
 	}
 
-
-
-
 	@Test
 	public void initTest() {
-		Assert.assertNotNull(this.visitController);
-//		Assert.assertNotNull(this.visitController.getVisits());
+		Assert.assertNotNull(mvc);
 	}
+
 
 
 	@Test
 	public void initNewVisitFormTest() throws Exception {
-		given(this.petRepository.findById(20)).willReturn(this.pets.get(0));
-		given(this.visitRepository.findByPetId(20)).willReturn(this.visits);
-		MvcResult result = mockMvc.perform(
-			get("/owners/20/pets/20/visits/new")
-			.accept(MediaType.ALL)
-		)
-			.andExpect(status().isOk())
-			.andReturn();
+		given(this.petRepository.findById(TEST_PET_ID)).willReturn(this.pets.get(0));
+		given(this.visitRepository.findByPetId(TEST_PET_ID)).willReturn(this.visits);
 
-		String content = result.getResponse().getContentAsString();
-		Assert.assertNotNull(content);
+		mvc.perform(get("/owners/20/pets/{petId}/visits/new", TEST_PET_ID))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("pet"))
+			.andExpect(view().name("pets/createOrUpdateVisitForm"));
 	}
 
 }
