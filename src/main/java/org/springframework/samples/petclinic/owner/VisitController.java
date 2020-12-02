@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 @Controller
 class VisitController {
 
+
 	private final VisitRepository visits;
 
 	private final PetRepository pets;
@@ -80,6 +81,7 @@ class VisitController {
 	// Spring MVC calls method loadPetWithVisit(...) before processNewVisitForm is called
 	@PostMapping("/owners/{ownerId}/pets/{petId}/visits/new")
 	public String processNewVisitForm(@Valid Visit visit, BindingResult result) {
+		System.out.println(visit);
 		if (result.hasErrors()) {
 			return "pets/createOrUpdateVisitForm";
 		}

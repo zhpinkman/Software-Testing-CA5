@@ -59,6 +59,7 @@ public class VisitControllerTests {
 		petType.setName("german");
 		petType.setId(20);
 
+
 		Owner owner = new Owner();
 		owner.setId(TEST_OWNER_ID);
 		owner.setFirstName("George");
@@ -125,7 +126,7 @@ public class VisitControllerTests {
 
 
 		mvc.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_PET_ID, TEST_OWNER_ID)
-			.param("visit_date", "2002-01-01").param("description", "new visit")
+			.param("date", "2020-01-01").param("description", "new visit")
 			.param("pet_id", String.valueOf(TEST_PET_ID)))
 			.andExpect(status().is3xxRedirection());
 
